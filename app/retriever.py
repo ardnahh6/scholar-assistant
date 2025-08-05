@@ -1,20 +1,37 @@
+import os
 from dotenv import load_dotenv
-from langchain.prompts import PromptTemplate
-from langchain.chains import retrieval_qa
-from langchain_community.vectorstores import FAISS
-from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_community.llms import huggingface_hub
+from langchain.vectorstores import FAISS
+from langchain.embeddings import HuggingFaceEmbeddings
+from langchain.llms import HuggingFacePipeline
+from langchain.chains.question_answering import load_qa_chain
+from transformers import AutoModelForCausalLM, AutoTokenizer, pipelines
 
 load_dotenv()
 
 INDEX_PATH = "data/index"
+MODEL_NAME = "microsoft/phi-2"
+HF_TOKEN = os.getenv("HF_TOKEN")
 
-prompt = """
-You are an academic research assistant. Answer the following questions completely and clearly based on the available documents.
+def load_model():
+    print("[INFO] 🔃 Loading Phi-2 Model...")
+    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME, token=HF_TOKEN)
+    model = AutoModelForCausalLM.from_pretrained(MODEL_NAME, token=HF_TOKEN)
 
-Question:
-{question}
+    pipe = pipelines("text-generation", model=model, tokenizer=tokenizer, max_new_tokens=256)
+    return HuggingFacePipeline(pipeline=pipe)
 
-Answer:
-"""
+def ask_question(question):
+    print("[INFO] 📚 Loading FAISS index...")
+    embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+    db = FAISS.load_local(INDEX_PATH, embeddings, allow_dangerous_deserialization=True)
+    docs = db.similarity_search(question)
 
+    llm = load_model()
+    chain = load_qa_chain(llm, chain_type="stuff")
+    result = chain.run(input_documents=docs, question=question)
+    return result
+
+if __name__ == "__main__":
+    while True:
+        q = input("❓ Anda > ")
+        print("🤖 Bot >", ask_question(q))
