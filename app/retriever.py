@@ -1,37 +1,36 @@
 import os
 from dotenv import load_dotenv
-from langchain.vectorstores import FAISS
-from langchain.embeddings import HuggingFaceEmbeddings
-from langchain.llms import HuggingFacePipeline
-from langchain.chains.question_answering import load_qa_chain
-from transformers import AutoModelForCausalLM, AutoTokenizer, pipelines
+from langchain_community.vectorstores import FAISS
+from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_groq import ChatGroq
+from langchain.chains import RetrievalQA
 
 load_dotenv()
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 INDEX_PATH = "data/index"
-MODEL_NAME = "microsoft/phi-2"
-HF_TOKEN = os.getenv("HF_TOKEN")
+MODEL_NAME = "llama3-8b-8192"
 
-def load_model():
-    print("[INFO] 🔃 Loading Phi-2 Model...")
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME, token=HF_TOKEN)
-    model = AutoModelForCausalLM.from_pretrained(MODEL_NAME, token=HF_TOKEN)
-
-    pipe = pipelines("text-generation", model=model, tokenizer=tokenizer, max_new_tokens=256)
-    return HuggingFacePipeline(pipeline=pipe)
+def load_groq_llm():
+    print("[INFO] ⚡️ Using GroqCloud model:", MODEL_NAME)
+    return ChatGroq(
+        model_name=MODEL_NAME,
+        temperature=0.5,
+        groq_api_key=GROQ_API_KEY
+    )
 
 def ask_question(question):
     print("[INFO] 📚 Loading FAISS index...")
     embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
     db = FAISS.load_local(INDEX_PATH, embeddings, allow_dangerous_deserialization=True)
-    docs = db.similarity_search(question)
+    retriever = db.as_retriever()
 
-    llm = load_model()
-    chain = load_qa_chain(llm, chain_type="stuff")
-    result = chain.run(input_documents=docs, question=question)
+    llm = load_groq_llm()
+    qa_chain = RetrievalQA.from_chain_type(llm=llm, retriever=retriever, return_source_documents=False)
+    result = qa_chain.run(question)
     return result
 
 if __name__ == "__main__":
     while True:
-        q = input("❓ Anda > ")
+        q = input("❓ You > ")
         print("🤖 Bot >", ask_question(q))
