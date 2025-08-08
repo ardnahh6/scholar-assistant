@@ -22,7 +22,8 @@ ScholarBot is a Streamlit-based application designed to help researchers quickly
 
 1.  Clone the repository:
     ```     
-    git clone https://github.com/ardnahh6/scholar-assistant.git     cd scholar-assistant
+    git clone https://github.com/ardnahh6/scholar-assistant.git     
+    cd scholar-assistant
     ```
 
 2.  Install dependencies: 
