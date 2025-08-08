@@ -21,16 +21,27 @@ ScholarBot is a Streamlit-based application designed to help researchers quickly
 ## ⚙️ Installation
 
 1.  Clone the repository:
-    `bash     git clone https://github.com/ardnahh6/scholar-assistant.git     cd scholar-assistant`
+    ```     
+    git clone https://github.com/ardnahh6/scholar-assistant.git     cd scholar-assistant
+    ```
 
-2.  Install dependencies: `bash     pip install -r requirements.txt`
+2.  Install dependencies: 
+    ```    
+    pip install -r requirements.txt
+    ```
 
 3.  Make sure you have **Ollama** installed and the desired model
-    pulled, for example: `bash     ollama pull llama3.2`
+    pulled, for example: 
+    ```
+    ollama pull llama3.2
+    ```
 
 ## 🖥️ How to Use
 
-1.  Start the Streamlit app: `bash     streamlit run app/interface.py`
+1.  Start the Streamlit app: 
+    ```
+    streamlit run app/interface.py
+    ```
 
 2.  Upload your PDF(s) via the web interface.
 
