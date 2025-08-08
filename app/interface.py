@@ -22,3 +22,24 @@ if uploaded_file:
 
     with st.spinner("Processing PDF..."):
         docs = load_pdfs(os.path.dirname(tmp_path))
+        chunks = split_docs(docs)
+        embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+        db = FAISS.from_documents(chunks, embeddings)
+        st.session_state.db = db
+        st.success("PDF successfully processed")
+
+if st.session_state.db:
+    question = st.text_input("Your Question:", placeholder="What is the main contribution of this journal?")
+
+    if st.button("Answer"):
+        if not question.strip():
+            st.warning("Please enter your question.")
+        else:
+            with st.spinner("Please wait, ScholarBot is finding the answer..."):
+                retriever = st.session_state.db.as_retriever()
+                result = ask_question(question, retriever=retriever)
+                st.markdown("### Answer:")
+                st.write(result)
+
+st.markdown("---")
+st.info("ScholarBot is your assistant for answering questions related to scientific journals.")

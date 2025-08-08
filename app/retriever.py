@@ -19,27 +19,45 @@ Question:
 Answer:
 """
 
-def get_chain():
+# This is for testing in local before testing with streamlit
+
+#def get_chain():
+#    embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+#    db = FAISS.load_local(INDEX_PATH, embeddings, allow_dangerous_deserialization=True)
+#    retriever = db.as_retriever()
+#
+#    prompt = PromptTemplate(template=template, input_variables=["context", "question"])
+#
+#    model = OllamaLLM(model="llama3.2")
+#
+#    qa_chain = RetrievalQA.from_chain_type(
+#        llm=model,
+#        retriever=retriever,
+#        return_source_documents=True,
+#        chain_type_kwargs={"prompt": prompt}
+#    )
+#
+#    return qa_chain
+
+
+def ask_question(question: str, retriever=None):
     embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
-    db = FAISS.load_local(INDEX_PATH, embeddings, allow_dangerous_deserialization=True)
-    retriever = db.as_retriever()
 
-    prompt = PromptTemplate(template=template, input_variables=["context", "question"])
+    if retriever is None:
+        db = FAISS.load_local(INDEX_PATH, embeddings, allow_dangerous_deserialization=True)
+        retriever = db.as_retriever()
 
-    model = OllamaLLM(model="llama3.2")
+    prompt = PromptTemplate(template=template, input_variables=["question"])
+    llm = OllamaLLM(model="llama3.2")
 
     qa_chain = RetrievalQA.from_chain_type(
-        llm=model,
+        llm=llm,
         retriever=retriever,
         return_source_documents=True,
         chain_type_kwargs={"prompt": prompt}
     )
 
-    return qa_chain
-
-def ask_question(question: str):
-    chain=get_chain()
-    result=chain({"query": question})
+    result = qa_chain({"query": question})
     return result["result"]
 
 if __name__ == "__main__":
